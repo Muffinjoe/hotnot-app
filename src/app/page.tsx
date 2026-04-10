@@ -1,65 +1,396 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
+import { renderShareCard } from "@/lib/render-card";
+
+interface Prompt {
+  id: number;
+  text: string;
+}
+
+interface VoteResult {
+  hotPct: number;
+}
+
+interface Choice {
+  text: string;
+  isHot: boolean;
+}
+
+type Phase = "voting" | "result" | "done" | "loading";
+
+const BATCH_SIZE = 10;
 
 export default function Home() {
+  const [queue, setQueue] = useState<Prompt[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [phase, setPhase] = useState<Phase>("loading");
+  const [result, setResult] = useState<VoteResult | null>(null);
+  const [userVotedHot, setUserVotedHot] = useState(false);
+  const [votedIds, setVotedIds] = useState<number[]>([]);
+  const [roundChoices, setRoundChoices] = useState<Choice[]>([]);
+  const [roundNumber, setRoundNumber] = useState(0);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "done">("idle");
+
+  const fetchBatch = useCallback(async (excludeIds: number[]) => {
+    setPhase("loading");
+    try {
+      const exclude = excludeIds.join(",");
+      const res = await fetch(`/api/prompts/random?exclude=${exclude}`);
+      const data = await res.json();
+      if (data.done || data.prompts.length === 0) {
+        // No more fresh prompts — start a fresh round from the full pool
+        const freshRes = await fetch("/api/prompts/random?exclude=");
+        const freshData = await freshRes.json();
+        if (freshData.done || freshData.prompts.length === 0) return;
+        setQueue(freshData.prompts);
+        setCurrentIndex(0);
+        setPhase("voting");
+      } else {
+        setQueue(data.prompts);
+        setCurrentIndex(0);
+        setPhase("voting");
+      }
+    } catch {
+      setTimeout(() => fetchBatch(excludeIds), 500);
+    }
+  }, []);
+
+  useEffect(() => {
+    const storedIds = localStorage.getItem("hotnot_voted");
+    const ids: number[] = storedIds ? JSON.parse(storedIds) : [];
+    setVotedIds(ids);
+    const storedRound = localStorage.getItem("hotnot_round");
+    if (storedRound) setRoundNumber(parseInt(storedRound));
+    fetchBatch(ids);
+  }, [fetchBatch]);
+
+  const prompt = queue[currentIndex] || null;
+
+  const handleVote = async (isHot: boolean) => {
+    if (!prompt || phase !== "voting") return;
+
+    setUserVotedHot(isHot);
+
+    try {
+      const res = await fetch("/api/prompts/vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: prompt.id, isHot }),
+      });
+      const data = await res.json();
+      setResult({ hotPct: data.hotPct });
+
+      const newIds = [...votedIds, prompt.id];
+      setVotedIds(newIds);
+      localStorage.setItem("hotnot_voted", JSON.stringify(newIds));
+
+      const newChoices = [...roundChoices, { text: prompt.text, isHot }];
+      setRoundChoices(newChoices);
+
+      setPhase("result");
+
+      setTimeout(() => {
+        if (currentIndex + 1 < queue.length) {
+          setCurrentIndex(currentIndex + 1);
+          setPhase("voting");
+        } else {
+          // Round complete
+          setPhase("done");
+        }
+      }, 1500);
+    } catch {
+      // user can try again
+    }
+  };
+
+  const handlePlayAgain = () => {
+    const newRound = roundNumber + 1;
+    setRoundNumber(newRound);
+    localStorage.setItem("hotnot_round", String(newRound));
+    setRoundChoices([]);
+    fetchBatch(votedIds);
+  };
+
+  const majority = result
+    ? userVotedHot
+      ? result.hotPct >= 50
+      : result.hotPct < 50
+    : false;
+
+  const hotCount = roundChoices.filter((c) => c.isHot).length;
+  const notCount = roundChoices.filter((c) => !c.isHot).length;
+  const total = hotCount + notCount;
+  const hotPctRound = total > 0 ? Math.round((hotCount / total) * 100) : 0;
+  const progress = queue.length > 0 ? currentIndex + 1 : 0;
+
+  const taglines = [
+    "Unpopular opinions detected \uD83D\uDC40",
+    "Bold. Slightly controversial.",
+    "You might disagree...",
+    "Cold takes incoming \uD83E\uDD76",
+  ];
+  const tagline = taglines[roundNumber % taglines.length];
+
+  const scoreLine =
+    hotPctRound >= 80
+      ? `${hotPctRound}% hot. You love everything \u2764\uFE0F`
+      : hotPctRound >= 60
+        ? `${hotPctRound}% hot. Mostly vibes \u2728`
+        : hotPctRound >= 40
+          ? "Balanced takes. Fair enough."
+          : hotPctRound >= 20
+            ? `Mostly NOT \uD83D\uDC40`
+            : `${hotPctRound}% hot. You're harsh \uD83D\uDE05`;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="fixed inset-0 bg-white text-neutral-900 flex flex-col">
+      {/* Header */}
+      <header className="flex items-center justify-between px-5 pt-3 h-14 shrink-0">
+        <Link href="/" className="text-lg font-bold tracking-tight">
+          HotNot<span className="text-neutral-400">.app</span>
+        </Link>
+        <div className="flex items-center gap-4">
+          {phase === "voting" && queue.length > 0 && (
+            <span className="text-sm text-neutral-400">
+              {progress}/{queue.length}
+            </span>
+          )}
+          <Link
+            href="/hot-list"
+            className="text-sm font-medium text-orange-500 hover:text-orange-600 transition-colors"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Hot List
+          </Link>
         </div>
-      </main>
-    </div>
+      </header>
+
+      {/* Content */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 overflow-y-auto">
+        {phase === "loading" ? (
+          <div className="text-neutral-400 text-lg">Loading...</div>
+        ) : phase === "done" ? (
+          <div className="w-full max-w-sm py-6 animate-[fadeIn_0.3s_ease-out]">
+            {/* Share Card */}
+            <div
+              ref={cardRef}
+              className="bg-neutral-50 rounded-2xl border border-neutral-200 px-4 pt-4 pb-3 mb-4"
+            >
+              <h2 className="text-lg font-black text-center leading-tight">
+                My Hot Takes &#x1F525;
+              </h2>
+              <p className="text-[11px] text-neutral-400 text-center mb-2.5">
+                {tagline}
+              </p>
+
+              <div className="grid grid-cols-2 gap-1">
+                {roundChoices.map((c, i) => (
+                  <div
+                    key={i}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium ${
+                      c.isHot
+                        ? "bg-green-50 border border-green-100"
+                        : "bg-red-50 border border-red-100"
+                    }`}
+                  >
+                    <span className="shrink-0 text-sm">
+                      {c.isHot ? "\uD83D\uDD25" : "\u274C"}
+                    </span>
+                    <span className="truncate">{c.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-xs font-semibold text-neutral-500 text-center mt-2.5">
+                {scoreLine}
+              </p>
+              <p className="text-sm font-semibold text-neutral-600 text-center mt-1.5">
+                hotnot.app
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="space-y-3">
+              <button
+                onClick={async () => {
+                  const canvas = renderShareCard(roundChoices, tagline, scoreLine);
+                  const blob = await new Promise<Blob | null>((res) =>
+                    canvas.toBlob(res, "image/png")
+                  );
+                  if (!blob) return;
+
+                  if (navigator.share && navigator.canShare) {
+                    const file = new File([blob], "my-hot-takes.png", {
+                      type: "image/png",
+                    });
+                    const shareData = { files: [file] };
+                    if (navigator.canShare(shareData)) {
+                      try {
+                        await navigator.share(shareData);
+                        return;
+                      } catch {
+                        // User cancelled — fall through to download
+                      }
+                    }
+                  }
+
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "my-hot-takes.png";
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="w-full py-4 rounded-2xl bg-neutral-900 hover:bg-neutral-800 active:scale-95 transition-all text-white font-bold text-lg cursor-pointer"
+              >
+                Share your takes &#x1F440;
+              </button>
+              <button
+                onClick={handlePlayAgain}
+                className="w-full py-4 rounded-2xl bg-orange-500 hover:bg-orange-400 active:scale-95 transition-all text-white font-bold text-lg cursor-pointer"
+              >
+                Play Again
+              </button>
+              <button
+                onClick={() => setShowEmailModal(true)}
+                className="w-full py-4 rounded-2xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-all cursor-pointer border border-neutral-200 text-center"
+              >
+                <span className="font-bold text-neutral-900">
+                  Want more like this? &#x1F440;
+                </span>
+                <span className="block text-xs text-neutral-400 mt-0.5">
+                  Get early access to the card game
+                </span>
+              </button>
+            </div>
+          </div>
+        ) : phase === "voting" && prompt ? (
+          <div
+            key={prompt.id}
+            className="text-center w-full max-w-sm animate-[fadeIn_0.2s_ease-out]"
+          >
+            <p className="text-5xl font-black leading-tight mb-16">
+              {prompt.text}
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => handleVote(true)}
+                className="flex-1 py-5 rounded-2xl bg-green-100 hover:bg-green-200 active:scale-95 transition-all text-3xl font-bold cursor-pointer border border-green-200"
+              >
+                <span className="text-4xl leading-none">&#x1F525;</span>
+              </button>
+              <button
+                onClick={() => handleVote(false)}
+                className="flex-1 py-5 rounded-2xl bg-red-100 hover:bg-red-200 active:scale-95 transition-all text-3xl font-bold border border-red-200 cursor-pointer"
+              >
+                <span className="text-4xl leading-none">&#x274C;</span>
+              </button>
+            </div>
+          </div>
+        ) : phase === "result" && result ? (
+          <div className="text-center animate-[fadeIn_0.15s_ease-out]">
+            <p className="text-7xl font-black mb-3">
+              {userVotedHot ? result.hotPct : 100 - result.hotPct}%
+            </p>
+            <p className="text-xl text-neutral-600 mb-2">
+              said {userVotedHot ? "HOT" : "NOT"}
+            </p>
+            <p className="text-sm text-neutral-400">
+              {majority
+                ? "You agree with most people"
+                : "You're in the minority \uD83D\uDC40"}
+            </p>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="h-8 shrink-0" />
+
+      {/* Email Modal */}
+      {showEmailModal && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-6"
+          onClick={() => emailStatus !== "sending" && setShowEmailModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 w-full max-w-sm animate-[fadeIn_0.15s_ease-out]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {emailStatus === "done" ? (
+              <div className="text-center py-4">
+                <p className="text-3xl mb-2">&#x1F525;</p>
+                <p className="text-lg font-bold">You're on the list!</p>
+                <p className="text-sm text-neutral-400 mt-1">
+                  We'll let you know when the card game drops.
+                </p>
+                <button
+                  onClick={() => {
+                    setShowEmailModal(false);
+                    setEmailStatus("idle");
+                    setEmail("");
+                  }}
+                  className="mt-5 w-full py-3 rounded-xl bg-neutral-100 hover:bg-neutral-200 font-medium text-sm cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <>
+                <h3 className="text-lg font-bold text-center">
+                  Want more like this? &#x1F440;
+                </h3>
+                <p className="text-sm text-neutral-400 text-center mt-1 mb-5">
+                  Drop your email for early access to the HotNot card game.
+                </p>
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!email.trim()) return;
+                    setEmailStatus("sending");
+                    try {
+                      await fetch("/api/email", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email: email.trim() }),
+                      });
+                      setEmailStatus("done");
+                    } catch {
+                      setEmailStatus("idle");
+                    }
+                  }}
+                >
+                  <input
+                    type="email"
+                    placeholder="you@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoFocus
+                    className="w-full px-4 py-3 rounded-xl border border-neutral-200 text-base outline-none focus:border-orange-400 transition-colors"
+                  />
+                  <button
+                    type="submit"
+                    disabled={emailStatus === "sending"}
+                    className="w-full mt-3 py-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 active:scale-95 transition-all text-white font-bold cursor-pointer disabled:opacity-50"
+                  >
+                    {emailStatus === "sending" ? "..." : "Get Early Access"}
+                  </button>
+                </form>
+                <button
+                  onClick={() => setShowEmailModal(false)}
+                  className="w-full mt-2 py-2 text-sm text-neutral-400 cursor-pointer"
+                >
+                  No thanks
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </main>
   );
 }
