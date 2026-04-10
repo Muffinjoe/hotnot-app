@@ -171,9 +171,7 @@ export default function Home() {
 
       {/* Content */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 overflow-y-auto">
-        {phase === "loading" ? (
-          <div className="text-neutral-400 text-lg">Loading...</div>
-        ) : phase === "done" ? (
+        {phase === "loading" ? null : phase === "done" ? (
           <div className="w-full max-w-sm py-6 animate-[fadeIn_0.3s_ease-out]">
             {/* Share Card */}
             <div
