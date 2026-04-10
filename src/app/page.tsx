@@ -156,23 +156,23 @@ export default function Home() {
   return (
     <main className="fixed inset-0 bg-white text-neutral-900 flex flex-col">
       {/* Header */}
-      <header className="flex items-center justify-between px-5 pt-3 h-14 shrink-0">
-        <Link href="/" className="text-lg font-bold tracking-tight">
+      <header className="grid grid-cols-3 items-center px-5 pt-3 h-14 shrink-0">
+        <Link href="/" className="text-lg font-bold tracking-tight justify-self-start">
           HotNot<span className="text-neutral-400">.app</span>
         </Link>
-        <div className="flex items-center gap-4">
+        <div className="justify-self-center">
           {phase === "voting" && queue.length > 0 && (
-            <span className="text-sm text-neutral-400">
-              {progress}/{queue.length}
+            <span className="text-2xl font-black tabular-nums">
+              {progress}<span className="text-neutral-300">/{queue.length}</span>
             </span>
           )}
-          <Link
-            href="/hot-list"
-            className="text-sm font-medium text-orange-500 hover:text-orange-600 transition-colors"
-          >
-            Hot List
-          </Link>
         </div>
+        <Link
+          href="/hot-list"
+          className="text-sm font-medium text-orange-500 hover:text-orange-600 transition-colors justify-self-end"
+        >
+          Hot List
+        </Link>
       </header>
 
       {/* Content */}
