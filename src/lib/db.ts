@@ -319,6 +319,13 @@ export async function initDb() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS events (
+      id SERIAL PRIMARY KEY,
+      event TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
 
   const count = await sql`SELECT COUNT(*) as c FROM prompts`;
   if (Number(count[0].c) === 0) {
@@ -373,4 +380,53 @@ export async function saveEmail(email: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export async function trackEvent(event: string): Promise<void> {
+  const sql = getDb();
+  await sql`INSERT INTO events (event) VALUES (${event})`;
+}
+
+export async function getAdminStats() {
+  const sql = getDb();
+
+  const emails = await sql`SELECT id, email, created_at FROM emails ORDER BY created_at DESC`;
+
+  const totalVotes = await sql`SELECT SUM(hot_votes + not_votes) as total FROM prompts`;
+
+  const todayHits = await sql`
+    SELECT COUNT(*) as count FROM events
+    WHERE event = 'page_view' AND created_at >= CURRENT_DATE
+  `;
+
+  const totalHits = await sql`
+    SELECT COUNT(*) as count FROM events WHERE event = 'page_view'
+  `;
+
+  const shareClicks = await sql`
+    SELECT COUNT(*) as count FROM events WHERE event = 'share_click'
+  `;
+
+  const todayShares = await sql`
+    SELECT COUNT(*) as count FROM events
+    WHERE event = 'share_click' AND created_at >= CURRENT_DATE
+  `;
+
+  const dailyHits = await sql`
+    SELECT DATE(created_at) as day, COUNT(*) as count
+    FROM events WHERE event = 'page_view'
+    GROUP BY DATE(created_at)
+    ORDER BY day DESC
+    LIMIT 30
+  `;
+
+  return {
+    emails: emails as unknown as { id: number; email: string; created_at: string }[],
+    totalVotes: Number(totalVotes[0]?.total || 0),
+    todayHits: Number(todayHits[0]?.count || 0),
+    totalHits: Number(totalHits[0]?.count || 0),
+    shareClicks: Number(shareClicks[0]?.count || 0),
+    todayShares: Number(todayShares[0]?.count || 0),
+    dailyHits: dailyHits as unknown as { day: string; count: number }[],
+  };
 }

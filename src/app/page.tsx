@@ -67,6 +67,12 @@ export default function Home() {
     const storedRound = localStorage.getItem("hotnot_round");
     if (storedRound) setRoundNumber(parseInt(storedRound));
     fetchBatch(ids);
+    // Track page view
+    fetch("/api/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "page_view" }),
+    }).catch(() => {});
   }, [fetchBatch]);
 
   const prompt = queue[currentIndex] || null;
@@ -220,6 +226,13 @@ export default function Home() {
                     canvas.toBlob(res, "image/png")
                   );
                   if (!blob) return;
+
+                  // Track share click
+                  fetch("/api/track", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ event: "share_click" }),
+                  }).catch(() => {});
 
                   if (navigator.share && navigator.canShare) {
                     const file = new File([blob], "my-hot-takes.png", {
