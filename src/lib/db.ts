@@ -115,7 +115,6 @@ const SEED_DATA: [string, number, number][] = [
   ["Toxic traits?", 2, 5],
   ["Red flags?", 5, 2],
   ["Lovebombing?", 1, 6],
-  ["Breadcrumbing?", 1, 6],
   ["Quiet quitting?", 4, 3],
   ["Loud quitting?", 3, 4],
   ["Nepotism?", 1, 6],
