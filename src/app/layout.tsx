@@ -15,6 +15,17 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "HotNot - Rate Everything",
   description: "Is it hot or not? Vote and see what everyone thinks.",
+  openGraph: {
+    title: "HotNot - Rate Everything",
+    description: "Is it hot or not? Vote and see what everyone thinks.",
+    images: ["/og-image.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "HotNot - Rate Everything",
+    description: "Is it hot or not? Vote and see what everyone thinks.",
+    images: ["/og-image.png"],
+  },
 };
 
 export const viewport: Viewport = {
