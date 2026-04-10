@@ -1,12 +1,11 @@
 import { type NextRequest } from "next/server";
 import { getAdminStats, initDb } from "@/lib/db";
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "hotnot2026";
-
 export async function GET(req: NextRequest) {
   const password = req.nextUrl.searchParams.get("password");
+  const adminPassword = process.env.ADMIN_PASSWORD || "hotnot2026";
 
-  if (password !== ADMIN_PASSWORD) {
+  if (password !== adminPassword) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
