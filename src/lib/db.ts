@@ -333,26 +333,27 @@ export async function initDb() {
 export async function getRandomBatch(excludeIds: number[], count: number): Promise<Prompt[]> {
   const sql = getDb();
   if (excludeIds.length === 0) {
-    return sql`SELECT * FROM prompts ORDER BY RANDOM() LIMIT ${count}` as Promise<Prompt[]>;
+    const rows = await sql`SELECT * FROM prompts ORDER BY RANDOM() LIMIT ${count}`;
+    return rows as unknown as Prompt[];
   }
-  return sql`SELECT * FROM prompts WHERE id != ALL(${excludeIds}) ORDER BY RANDOM() LIMIT ${count}` as Promise<Prompt[]>;
+  const rows = await sql`SELECT * FROM prompts WHERE id != ALL(${excludeIds}) ORDER BY RANDOM() LIMIT ${count}`;
+  return rows as unknown as Prompt[];
 }
 
 export async function vote(id: number, isHot: boolean): Promise<Prompt | null> {
   const sql = getDb();
-  const col = isHot ? "hot_votes" : "not_votes";
   if (isHot) {
     await sql`UPDATE prompts SET hot_votes = hot_votes + 1 WHERE id = ${id}`;
   } else {
     await sql`UPDATE prompts SET not_votes = not_votes + 1 WHERE id = ${id}`;
   }
   const rows = await sql`SELECT * FROM prompts WHERE id = ${id}`;
-  return (rows[0] as Prompt) || null;
+  return (rows[0] as unknown as Prompt) || null;
 }
 
 export async function getHotList(): Promise<(Prompt & { hot_pct: number })[]> {
   const sql = getDb();
-  return sql`
+  const rows = await sql`
     SELECT *,
       CASE WHEN (hot_votes + not_votes) > 0
         THEN ROUND(hot_votes * 100.0 / (hot_votes + not_votes))
@@ -361,7 +362,8 @@ export async function getHotList(): Promise<(Prompt & { hot_pct: number })[]> {
     FROM prompts
     WHERE (hot_votes + not_votes) > 0
     ORDER BY hot_pct DESC, (hot_votes + not_votes) DESC
-  ` as Promise<(Prompt & { hot_pct: number })[]>;
+  `;
+  return rows as unknown as (Prompt & { hot_pct: number })[];
 }
 
 export async function saveEmail(email: string): Promise<boolean> {
