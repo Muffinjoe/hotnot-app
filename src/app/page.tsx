@@ -35,6 +35,8 @@ export default function Home() {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [email, setEmail] = useState("");
   const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "done">("idle");
+  const [shareImageUrl, setShareImageUrl] = useState<string | null>(null);
+  const [shareImageBlob, setShareImageBlob] = useState<Blob | null>(null);
 
   const fetchBatch = useCallback(async (excludeIds: number[]) => {
     setPhase("loading");
@@ -231,7 +233,6 @@ export default function Home() {
               <button
                 onClick={async () => {
                   const canvas = renderShareCard(roundChoices, tagline, scoreLine);
-                  // JPEG encodes much faster than PNG and saves to Photos faster on iOS
                   const blob = await new Promise<Blob | null>((res) =>
                     canvas.toBlob(res, "image/jpeg", 0.92)
                   );
@@ -244,27 +245,11 @@ export default function Home() {
                     body: JSON.stringify({ event: "share_click" }),
                   }).catch(() => {});
 
-                  if (navigator.share && navigator.canShare) {
-                    const file = new File([blob], "my-hot-takes.jpg", {
-                      type: "image/jpeg",
-                    });
-                    const shareData = { files: [file] };
-                    if (navigator.canShare(shareData)) {
-                      try {
-                        await navigator.share(shareData);
-                        return;
-                      } catch {
-                        // User cancelled — fall through to download
-                      }
-                    }
-                  }
-
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = "my-hot-takes.jpg";
-                  a.click();
-                  URL.revokeObjectURL(url);
+                  // Show in modal so users can long-press to save (iOS-native)
+                  // or use share button for sending to other apps
+                  if (shareImageUrl) URL.revokeObjectURL(shareImageUrl);
+                  setShareImageBlob(blob);
+                  setShareImageUrl(URL.createObjectURL(blob));
                 }}
                 className="w-full py-4 rounded-2xl bg-neutral-900 hover:bg-neutral-800 active:scale-95 transition-all text-white font-bold text-lg cursor-pointer"
               >
@@ -330,6 +315,67 @@ export default function Home() {
       </div>
 
       <div className="h-8 shrink-0" />
+
+      {/* Share Image Modal */}
+      {shareImageUrl && (
+        <div
+          className="fixed inset-0 bg-black/85 z-50 flex flex-col items-center justify-center px-4 py-6 animate-[fadeIn_0.15s_ease-out]"
+          onClick={() => {
+            URL.revokeObjectURL(shareImageUrl);
+            setShareImageUrl(null);
+            setShareImageBlob(null);
+          }}
+        >
+          <div
+            className="w-full max-w-sm flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-white text-sm font-medium mb-3 text-center">
+              Press &amp; hold the image to save &#x1F447;
+            </p>
+            <img
+              src={shareImageUrl}
+              alt="My Hot Takes"
+              className="w-full rounded-2xl shadow-2xl mb-4"
+              draggable={false}
+            />
+            <div className="w-full space-y-2">
+              <button
+                onClick={async () => {
+                  if (!shareImageBlob) return;
+                  const file = new File([shareImageBlob], "my-hot-takes.jpg", {
+                    type: "image/jpeg",
+                  });
+                  if (
+                    navigator.share &&
+                    navigator.canShare &&
+                    navigator.canShare({ files: [file] })
+                  ) {
+                    try {
+                      await navigator.share({ files: [file] });
+                    } catch {
+                      // user cancelled
+                    }
+                  }
+                }}
+                className="w-full py-3 rounded-2xl bg-orange-500 hover:bg-orange-400 active:scale-95 transition-all text-white font-bold cursor-pointer"
+              >
+                Share to apps &#x1F4F2;
+              </button>
+              <button
+                onClick={() => {
+                  URL.revokeObjectURL(shareImageUrl);
+                  setShareImageUrl(null);
+                  setShareImageBlob(null);
+                }}
+                className="w-full py-3 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white font-medium cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Email Modal */}
       {showEmailModal && (
