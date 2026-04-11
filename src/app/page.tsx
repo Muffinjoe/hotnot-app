@@ -258,7 +258,7 @@ export default function Home() {
                 }}
                 className="w-full py-4 rounded-2xl bg-neutral-900 hover:bg-neutral-800 active:scale-95 transition-all text-white font-bold text-lg cursor-pointer"
               >
-                Share your takes &#x1F440;
+                Download your card &#x1F440;
               </button>
               <button
                 onClick={handlePlayAgain}
@@ -266,17 +266,17 @@ export default function Home() {
               >
                 Play Again
               </button>
-              <button
-                onClick={() => setShowEmailModal(true)}
-                className="w-full py-4 rounded-2xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-all cursor-pointer border border-neutral-200 text-center"
+              <Link
+                href="/record"
+                className="block w-full py-4 rounded-2xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-all cursor-pointer border border-neutral-200 text-center"
               >
                 <span className="font-bold text-neutral-900">
-                  Want more like this? &#x1F440;
+                  Make your video &#x1F3A5;
                 </span>
                 <span className="block text-xs text-neutral-400 mt-0.5">
-                  Get early access to the card game
+                  Share your reactions
                 </span>
-              </button>
+              </Link>
             </div>
           </div>
         ) : phase === "voting" && prompt ? (
