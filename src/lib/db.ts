@@ -322,6 +322,27 @@ const SEED_DATA: [string, number, number][] = [
   ["Tom Cruise?", 5, 2],
   ["Cucumber?", 4, 3],
   ["Reality TV?", 3, 4],
+  // Round 4 additions
+  ["Running?", 4, 3],
+  ["Socks with sandals?", 2, 5],
+  ["Mona Lisa?", 4, 3],
+  ["Dubai?", 3, 4],
+  ["Palestine?", 4, 3],
+  ["Ye?", 3, 4],
+  ["Eiffel Tower?", 5, 2],
+  ["Christmas?", 6, 1],
+  ["Fossil fuels?", 1, 6],
+  ["Sushi?", 5, 2],
+  ["American Football?", 3, 4],
+  ["Pokemon cards?", 5, 2],
+  ["Cold toilet seats?", 1, 6],
+  ["Bumbags?", 3, 4],
+  ["Prosthetic limbs?", 5, 2],
+  ["90s cartoons?", 6, 1],
+  ["Flat Earth?", 1, 6],
+  ["Boomers?", 2, 5],
+  ["Israel?", 3, 4],
+  ["4-day work week?", 6, 1],
 ];
 
 export interface Prompt {
