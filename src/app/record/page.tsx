@@ -540,7 +540,7 @@ export default function RecordPage() {
     phase === "processing";
 
   return (
-    <main className="fixed inset-0 bg-black text-white flex flex-col overflow-hidden">
+    <main className="fixed inset-0 bg-white text-neutral-900 flex flex-col overflow-hidden">
       {/* Hidden video element that plays the camera stream */}
       <video
         ref={videoRef}
@@ -555,12 +555,12 @@ export default function RecordPage() {
           <div className="w-full max-w-sm">
             <p className="text-5xl mb-4">&#x1F3A5;</p>
             <h1 className="text-3xl font-black mb-2">Record your HotNot</h1>
-            <p className="text-sm text-neutral-400 mb-6">
+            <p className="text-sm text-neutral-500 mb-6">
               Tap through 10 prompts on camera and share the clip. Nothing is
               uploaded &mdash; everything stays on your device.
             </p>
 
-            <label className="flex items-center justify-center gap-2 text-sm text-neutral-300 mb-4 cursor-pointer">
+            <label className="flex items-center justify-center gap-2 text-sm text-neutral-600 mb-4 cursor-pointer">
               <input
                 type="checkbox"
                 checked={micEnabled}
@@ -576,7 +576,7 @@ export default function RecordPage() {
             >
               Enable Camera
             </button>
-            <p className="text-[11px] text-neutral-500 mt-4">
+            <p className="text-[11px] text-neutral-400 mt-4">
               Max 90s &middot; portrait only &middot; processed locally
             </p>
           </div>
@@ -585,7 +585,7 @@ export default function RecordPage() {
 
       {/* PERMISSION PENDING */}
       {phase === "permission" && (
-        <div className="flex-1 flex items-center justify-center text-neutral-400">
+        <div className="flex-1 flex items-center justify-center text-neutral-500">
           Waiting for camera permission...
         </div>
       )}
@@ -595,14 +595,14 @@ export default function RecordPage() {
         <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
           <p className="text-4xl mb-3">&#x26A0;&#xFE0F;</p>
           <p className="text-lg font-bold mb-2">Something went wrong</p>
-          <p className="text-sm text-neutral-400 mb-6 max-w-sm">{error}</p>
+          <p className="text-sm text-neutral-500 mb-6 max-w-sm">{error}</p>
           <button
             onClick={() => {
               fullCleanup();
               setError("");
               setPhase("idle");
             }}
-            className="py-3 px-6 rounded-xl bg-neutral-800 hover:bg-neutral-700 font-medium cursor-pointer"
+            className="py-3 px-6 rounded-xl bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 font-medium cursor-pointer"
           >
             Start over
           </button>
@@ -662,13 +662,13 @@ export default function RecordPage() {
                     fullCleanup();
                     setPhase("idle");
                   }}
-                  className="px-5 py-3 rounded-xl bg-black/60 backdrop-blur-sm font-medium cursor-pointer"
+                  className="px-5 py-3 rounded-xl bg-white/90 backdrop-blur-sm border border-neutral-200 text-neutral-900 font-medium cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={beginRecording}
-                  className="px-6 py-3 rounded-xl bg-red-500 hover:bg-red-400 font-bold cursor-pointer flex items-center gap-2"
+                  className="px-6 py-3 rounded-xl bg-red-500 hover:bg-red-400 text-white font-bold cursor-pointer flex items-center gap-2"
                 >
                   <span className="w-3 h-3 rounded-full bg-white" />
                   Start Recording
@@ -679,15 +679,15 @@ export default function RecordPage() {
             {phase === "recording" && (
               <button
                 onClick={stopRecording}
-                className="px-6 py-3 rounded-xl bg-black/70 backdrop-blur-sm font-bold cursor-pointer flex items-center gap-2"
+                className="px-6 py-3 rounded-xl bg-white/90 backdrop-blur-sm border border-neutral-200 text-neutral-900 font-bold cursor-pointer flex items-center gap-2"
               >
-                <span className="w-3 h-3 bg-white" />
+                <span className="w-3 h-3 bg-red-500" />
                 Stop
               </button>
             )}
 
             {phase === "processing" && (
-              <div className="px-5 py-3 rounded-xl bg-black/70 text-sm">
+              <div className="px-5 py-3 rounded-xl bg-white/90 backdrop-blur-sm border border-neutral-200 text-neutral-900 text-sm">
                 Processing...
               </div>
             )}
@@ -695,7 +695,7 @@ export default function RecordPage() {
 
           {/* Progress bar for max duration */}
           {phase === "recording" && (
-            <div className="absolute top-0 left-0 right-0 h-1 bg-white/10 z-10">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-neutral-200 z-10">
               <div
                 className="h-full bg-red-500 transition-[width]"
                 style={{
@@ -719,7 +719,7 @@ export default function RecordPage() {
                 src={videoUrl}
                 controls
                 playsInline
-                className="max-h-[65vh] w-auto rounded-2xl bg-black"
+                className="max-h-[65vh] w-auto rounded-2xl bg-neutral-100 border border-neutral-200"
               />
             </div>
             <div className="space-y-2">
@@ -731,18 +731,18 @@ export default function RecordPage() {
               </button>
               <button
                 onClick={downloadVideo}
-                className="w-full py-3 rounded-2xl bg-neutral-800 hover:bg-neutral-700 active:scale-95 transition-all font-medium cursor-pointer"
+                className="w-full py-3 rounded-2xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-all font-medium text-neutral-900 border border-neutral-200 cursor-pointer"
               >
                 Download
               </button>
               <button
                 onClick={retake}
-                className="w-full py-3 rounded-2xl bg-transparent hover:bg-white/5 active:scale-95 transition-all font-medium text-neutral-400 cursor-pointer"
+                className="w-full py-3 rounded-2xl bg-transparent hover:bg-neutral-100 active:scale-95 transition-all font-medium text-neutral-500 cursor-pointer"
               >
                 Retake
               </button>
             </div>
-            <p className="text-[11px] text-neutral-500 text-center mt-3">
+            <p className="text-[11px] text-neutral-400 text-center mt-3">
               Saved locally on your device. Nothing uploaded.
               {videoMime && ` (${videoMime.split(";")[0]})`}
             </p>
