@@ -29,16 +29,9 @@ export function renderShareCard(
   canvas.height = SIZE;
   const ctx = canvas.getContext("2d")!;
 
-  // Background
+  // Background - full square, no rounded corners
   ctx.fillStyle = "#fafafa";
-  roundRect(ctx, 0, 0, SIZE, SIZE, 16 * scale);
-  ctx.fill();
-
-  // Border
-  ctx.strokeStyle = "#e5e5e5";
-  ctx.lineWidth = 1 * scale;
-  roundRect(ctx, 0, 0, SIZE, SIZE, 16 * scale);
-  ctx.stroke();
+  ctx.fillRect(0, 0, SIZE, SIZE);
 
   // Title
   ctx.fillStyle = "#171717";

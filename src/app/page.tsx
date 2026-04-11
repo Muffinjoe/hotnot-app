@@ -336,7 +336,7 @@ export default function Home() {
             <img
               src={shareImageUrl}
               alt="My Hot Takes"
-              className="w-full rounded-2xl shadow-2xl mb-4"
+              className="w-full shadow-2xl mb-4"
               draggable={false}
             />
             <div className="w-full space-y-2">
