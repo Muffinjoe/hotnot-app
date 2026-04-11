@@ -167,12 +167,21 @@ export default function Home() {
             </span>
           )}
         </div>
-        <Link
-          href="/hot-list"
-          className="text-sm font-medium text-orange-500 hover:text-orange-600 transition-colors justify-self-end"
-        >
-          Hot List
-        </Link>
+        <div className="justify-self-end">
+          <Link
+            href="/record"
+            className="md:hidden text-2xl leading-none"
+            aria-label="Record a video"
+          >
+            &#x1F3A5;
+          </Link>
+          <Link
+            href="/hot-list"
+            className="hidden md:inline text-sm font-medium text-orange-500 hover:text-orange-600 transition-colors"
+          >
+            Hot List
+          </Link>
+        </div>
       </header>
 
       {/* Content */}
