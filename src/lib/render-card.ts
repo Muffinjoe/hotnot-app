@@ -8,8 +8,8 @@ export function renderShareCard(
   tagline: string,
   scoreLine: string
 ): HTMLCanvasElement {
-  const scale = 3;
-  const SIZE = 390 * scale; // square
+  const scale = 2;
+  const SIZE = 540 * scale; // 1080 - perfect for IG square
   const pad = 24 * scale;
   const colGap = 8 * scale;
   const colW = (SIZE - pad * 2 - colGap) / 2;

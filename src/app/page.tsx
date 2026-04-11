@@ -231,8 +231,9 @@ export default function Home() {
               <button
                 onClick={async () => {
                   const canvas = renderShareCard(roundChoices, tagline, scoreLine);
+                  // JPEG encodes much faster than PNG and saves to Photos faster on iOS
                   const blob = await new Promise<Blob | null>((res) =>
-                    canvas.toBlob(res, "image/png")
+                    canvas.toBlob(res, "image/jpeg", 0.92)
                   );
                   if (!blob) return;
 
@@ -244,8 +245,8 @@ export default function Home() {
                   }).catch(() => {});
 
                   if (navigator.share && navigator.canShare) {
-                    const file = new File([blob], "my-hot-takes.png", {
-                      type: "image/png",
+                    const file = new File([blob], "my-hot-takes.jpg", {
+                      type: "image/jpeg",
                     });
                     const shareData = { files: [file] };
                     if (navigator.canShare(shareData)) {
@@ -261,7 +262,7 @@ export default function Home() {
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.href = url;
-                  a.download = "my-hot-takes.png";
+                  a.download = "my-hot-takes.jpg";
                   a.click();
                   URL.revokeObjectURL(url);
                 }}
