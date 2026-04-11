@@ -321,7 +321,7 @@ export default function Home() {
             </p>
             <p className="text-lg font-bold text-neutral-700 mt-2">
               {majority
-                ? "You agree with most people"
+                ? "You agree with most people \u2705"
                 : "You're in the minority \uD83D\uDC40"}
             </p>
           </div>
