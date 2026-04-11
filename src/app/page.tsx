@@ -268,7 +268,7 @@ export default function Home() {
               </button>
               <Link
                 href="/record"
-                className="block w-full py-4 rounded-2xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-all cursor-pointer border border-neutral-200 text-center"
+                className="block md:hidden w-full py-4 rounded-2xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-all cursor-pointer border border-neutral-200 text-center"
               >
                 <span className="font-bold text-neutral-900">
                   Make your video &#x1F3A5;
