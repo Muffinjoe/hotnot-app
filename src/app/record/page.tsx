@@ -387,6 +387,12 @@ export default function RecordPage() {
       setVideoUrl(url);
       setVideoMime(type);
       setPhase("review");
+      // Track video creation
+      fetch("/api/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event: "video_made" }),
+      }).catch(() => {});
     };
 
     recorder.onerror = () => {

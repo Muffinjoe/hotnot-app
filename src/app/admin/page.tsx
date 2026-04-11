@@ -9,6 +9,8 @@ interface AdminData {
   totalHits: number;
   shareClicks: number;
   todayShares: number;
+  totalVideos: number;
+  todayVideos: number;
   dailyHits: { day: string; count: number }[];
 }
 
@@ -101,6 +103,14 @@ export default function AdminPage() {
         <div className="bg-neutral-50 rounded-xl p-4 border border-neutral-200">
           <p className="text-2xl font-black">{data.shareClicks}</p>
           <p className="text-xs text-neutral-400">Total shares</p>
+        </div>
+        <div className="bg-neutral-50 rounded-xl p-4 border border-neutral-200">
+          <p className="text-2xl font-black">{data.todayVideos}</p>
+          <p className="text-xs text-neutral-400">Videos today</p>
+        </div>
+        <div className="bg-neutral-50 rounded-xl p-4 border border-neutral-200">
+          <p className="text-2xl font-black">{data.totalVideos}</p>
+          <p className="text-xs text-neutral-400">Total videos</p>
         </div>
         <div className="bg-neutral-50 rounded-xl p-4 border border-neutral-200">
           <p className="text-2xl font-black">{data.totalVotes}</p>

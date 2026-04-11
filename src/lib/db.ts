@@ -290,6 +290,38 @@ const SEED_DATA: [string, number, number][] = [
   ["Booking flights randomly?", 5, 2],
   ["Showing up unannounced?", 2, 5],
   ["Blocking people?", 4, 3],
+  // Pop culture & misc additions
+  ["Board games?", 5, 2],
+  ["Smoking?", 2, 5],
+  ["Yo-yos?", 3, 4],
+  ["Xbox?", 4, 3],
+  ["The Simpsons?", 5, 2],
+  ["Speeding?", 3, 4],
+  ["South Korea?", 5, 2],
+  ["Paper straws?", 2, 5],
+  ["Big juicy butts?", 5, 2],
+  ["Lego?", 6, 1],
+  ["The number 69?", 4, 3],
+  ["DC Movies?", 3, 4],
+  ["Marvel Movies?", 4, 3],
+  ["80s nostalgia?", 5, 2],
+  ["Cocaine?", 2, 5],
+  ["Music festivals?", 5, 2],
+  ["Electric vehicles?", 4, 3],
+  ["Craft beer?", 4, 3],
+  ["Museums?", 5, 2],
+  ["Gucci?", 3, 4],
+  ["Six seven?", 3, 4],
+  ["Chocolate?", 6, 1],
+  ["Haribo?", 5, 2],
+  ["Pringles?", 5, 2],
+  ["Pizza?", 6, 1],
+  ["Transformers?", 3, 4],
+  ["Class struggle?", 3, 4],
+  ["Breaking Bad?", 6, 1],
+  ["Tom Cruise?", 5, 2],
+  ["Cucumber?", 4, 3],
+  ["Reality TV?", 3, 4],
 ];
 
 export interface Prompt {
@@ -412,6 +444,15 @@ export async function getAdminStats() {
     WHERE event = 'share_click' AND created_at >= CURRENT_DATE
   `;
 
+  const totalVideos = await sql`
+    SELECT COUNT(*) as count FROM events WHERE event = 'video_made'
+  `;
+
+  const todayVideos = await sql`
+    SELECT COUNT(*) as count FROM events
+    WHERE event = 'video_made' AND created_at >= CURRENT_DATE
+  `;
+
   const dailyHits = await sql`
     SELECT DATE(created_at) as day, COUNT(*) as count
     FROM events WHERE event = 'page_view'
@@ -427,6 +468,8 @@ export async function getAdminStats() {
     totalHits: Number(totalHits[0]?.count || 0),
     shareClicks: Number(shareClicks[0]?.count || 0),
     todayShares: Number(todayShares[0]?.count || 0),
+    totalVideos: Number(totalVideos[0]?.count || 0),
+    todayVideos: Number(todayVideos[0]?.count || 0),
     dailyHits: dailyHits as unknown as { day: string; count: number }[],
   };
 }
