@@ -310,7 +310,7 @@ export default function Home() {
             <p className="text-xl text-neutral-600 mb-2">
               said {userVotedHot ? "HOT" : "NOT"}
             </p>
-            <p className="text-sm text-neutral-400">
+            <p className="text-lg font-bold text-neutral-700 mt-2">
               {majority
                 ? "You agree with most people"
                 : "You're in the minority \uD83D\uDC40"}
