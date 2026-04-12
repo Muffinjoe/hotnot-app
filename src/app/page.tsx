@@ -297,7 +297,7 @@ export default function Home() {
                       a.download = `hotnot-takes.${ext}`;
                       a.click();
                     }}
-                    className="w-full py-4 rounded-2xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-all text-neutral-700 font-bold text-lg cursor-pointer border border-neutral-200"
+                    className="hidden md:block w-full py-4 rounded-2xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-all text-neutral-700 font-bold text-lg cursor-pointer border border-neutral-200"
                   >
                     Download Video &#x2B07;&#xFE0F;
                   </button>
