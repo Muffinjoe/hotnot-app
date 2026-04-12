@@ -107,8 +107,8 @@ function drawFrame(
   }
 
   // Persistent bottom branding
-  ctx.fillStyle = "#d4d4d4";
-  ctx.font = `500 ${22}px -apple-system, BlinkMacSystemFont, sans-serif`;
+  ctx.fillStyle = "#a3a3a3";
+  ctx.font = `700 ${26}px -apple-system, BlinkMacSystemFont, sans-serif`;
   ctx.textAlign = "center";
   ctx.fillText("hotnot.app", W / 2, H - 40);
 }
