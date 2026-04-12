@@ -108,7 +108,6 @@ const SEED_DATA: [string, number, number][] = [
   ["Prenups?", 5, 2],
   ["Staying friends?", 3, 4],
   ["Dry January?", 3, 4],
-  ["Sober curious?", 3, 4],
   ["Microdosing?", 3, 4],
   ["Astrology?", 2, 5],
   ["Manifestation?", 3, 4],
