@@ -8,11 +8,6 @@ const MOCK_PROMPTS = [
   "Gym at 6am?",
   "Oat milk?",
   "LinkedIn?",
-  "Dating apps?",
-  "Therapy?",
-  "Karaoke?",
-  "Pineapple on pizza?",
-  "Sleep?",
 ];
 
 const CANVAS_W = 720;
