@@ -9,91 +9,85 @@ export function renderShareCard(
   scoreLine: string
 ): HTMLCanvasElement {
   const scale = 2;
-  const SIZE = 540 * scale; // 1080 - perfect for IG square
-  const pad = 24 * scale;
-  const colGap = 8 * scale;
-  const colW = (SIZE - pad * 2 - colGap) / 2;
+  const SIZE = 540 * scale; // 1080px square
 
-  const rows = Math.ceil(choices.length / 2);
+  const pad = 28 * scale;
+  const rowGap = 8 * scale;
+  const pillH = 44 * scale;
+  const pillW = SIZE - pad * 2;
 
-  // Calculate pill height and gap to fill available space
-  const headerH = 70 * scale;
-  const footerH = 60 * scale;
-  const availableH = SIZE - headerH - footerH;
-  const rowGap = 5 * scale;
-  const pillH = Math.floor((availableH - (rows - 1) * rowGap) / rows);
-  const gridH = rows * pillH + (rows - 1) * rowGap;
+  const headerH = 80 * scale;
+  const footerH = 70 * scale;
+  const listH = choices.length * pillH + (choices.length - 1) * rowGap;
 
   const canvas = document.createElement("canvas");
   canvas.width = SIZE;
   canvas.height = SIZE;
   const ctx = canvas.getContext("2d")!;
 
-  // Background - full square, no rounded corners
+  // Background
   ctx.fillStyle = "#fafafa";
   ctx.fillRect(0, 0, SIZE, SIZE);
 
   // Title
   ctx.fillStyle = "#171717";
-  ctx.font = `800 ${18 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+  ctx.font = `800 ${22 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
   ctx.textAlign = "center";
-  ctx.fillText("My Hot Takes \uD83D\uDD25", SIZE / 2, 28 * scale);
+  ctx.fillText("My Hot Takes \uD83D\uDD25", SIZE / 2, 32 * scale);
 
   // Tagline
   ctx.fillStyle = "#a3a3a3";
-  ctx.font = `400 ${11 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
-  ctx.fillText(tagline, SIZE / 2, 44 * scale);
+  ctx.font = `400 ${12 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+  ctx.fillText(tagline, SIZE / 2, 52 * scale);
 
-  // Grid
-  const gridTop = headerH;
-  ctx.textAlign = "left";
+  // List - vertically centered in the available space
+  const listTop = headerH + (SIZE - headerH - footerH - listH) / 2;
 
   choices.forEach((c, i) => {
-    const col = i % 2;
-    const row = Math.floor(i / 2);
-    const x = pad + col * (colW + colGap);
-    const y = gridTop + row * (pillH + rowGap);
+    const x = pad;
+    const y = listTop + i * (pillH + rowGap);
 
     // Pill background
     ctx.fillStyle = c.isHot ? "#f0fdf4" : "#fef2f2";
-    roundRect(ctx, x, y, colW, pillH, 8 * scale);
+    roundRect(ctx, x, y, pillW, pillH, 12 * scale);
     ctx.fill();
 
     // Pill border
     ctx.strokeStyle = c.isHot ? "#dcfce7" : "#fecaca";
-    ctx.lineWidth = 1 * scale;
-    roundRect(ctx, x, y, colW, pillH, 8 * scale);
+    ctx.lineWidth = 1.5 * scale;
+    roundRect(ctx, x, y, pillW, pillH, 12 * scale);
     ctx.stroke();
 
-    // Emoji
-    ctx.font = `${13 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+    // Text (left aligned)
+    ctx.font = `600 ${15 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
     ctx.fillStyle = "#171717";
-    const emoji = c.isHot ? "\uD83D\uDD25" : "\u274C";
-    ctx.fillText(emoji, x + 8 * scale, y + pillH / 2 + 5 * scale);
-
-    // Text
-    ctx.font = `500 ${11 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
-    ctx.fillStyle = "#171717";
-    const maxTextW = colW - 32 * scale;
+    ctx.textAlign = "left";
+    const maxTextW = pillW - 50 * scale;
     let text = c.text;
     while (ctx.measureText(text).width > maxTextW && text.length > 3) {
       text = text.slice(0, -1);
     }
     if (text !== c.text) text += "\u2026";
-    ctx.fillText(text, x + 24 * scale, y + pillH / 2 + 4 * scale);
+    ctx.fillText(text, x + 16 * scale, y + pillH / 2 + 6 * scale);
+
+    // Emoji (right aligned)
+    ctx.font = `${18 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+    ctx.textAlign = "right";
+    const emoji = c.isHot ? "\uD83D\uDD25" : "\u274C";
+    ctx.fillText(emoji, x + pillW - 14 * scale, y + pillH / 2 + 7 * scale);
   });
 
-  // Footer - centered in remaining space
-  const footerTop = gridTop + gridH;
+  // Footer
+  const footerTop = SIZE - footerH;
   const footerCenter = footerTop + footerH / 2;
 
   ctx.textAlign = "center";
   ctx.fillStyle = "#737373";
-  ctx.font = `600 ${12 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
-  ctx.fillText(scoreLine, SIZE / 2, footerCenter - 6 * scale);
+  ctx.font = `600 ${13 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+  ctx.fillText(scoreLine, SIZE / 2, footerCenter - 8 * scale);
 
   ctx.fillStyle = "#525252";
-  ctx.font = `600 ${13 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+  ctx.font = `600 ${14 * scale}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
   ctx.fillText("hotnot.app", SIZE / 2, footerCenter + 16 * scale);
 
   return canvas;

@@ -20,7 +20,7 @@ interface Choice {
 
 type Phase = "voting" | "result" | "done" | "loading";
 
-const BATCH_SIZE = 10;
+const BATCH_SIZE = 5;
 
 export default function Home() {
   const [queue, setQueue] = useState<Prompt[]>([]);
@@ -202,20 +202,20 @@ export default function Home() {
                 {tagline}
               </p>
 
-              <div className="grid grid-cols-2 gap-1">
+              <div className="space-y-1.5">
                 {roundChoices.map((c, i) => (
                   <div
                     key={i}
-                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium ${
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium ${
                       c.isHot
                         ? "bg-green-50 border border-green-100"
                         : "bg-red-50 border border-red-100"
                     }`}
                   >
-                    <span className="shrink-0 text-sm">
+                    <span className="truncate mr-2">{c.text}</span>
+                    <span className="shrink-0 text-lg">
                       {c.isHot ? "\uD83D\uDD25" : "\u274C"}
                     </span>
-                    <span className="truncate">{c.text}</span>
                   </div>
                 ))}
               </div>

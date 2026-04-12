@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     .map(Number)
     .filter((n) => !isNaN(n));
 
-  const batch = await getRandomBatch(excludeIds, 10);
+  const batch = await getRandomBatch(excludeIds, 5);
 
   if (batch.length === 0) {
     return Response.json({ done: true, prompts: [] });
