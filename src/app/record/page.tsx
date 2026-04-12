@@ -2,13 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 
-const MOCK_PROMPTS = [
-  "Marriage?",
-  "Crypto?",
-  "Gym at 6am?",
-  "Oat milk?",
-  "LinkedIn?",
-];
+const FALLBACK_PROMPTS = ["Marriage?", "Crypto?", "Gym at 6am?", "Oat milk?", "LinkedIn?"];
 
 const CANVAS_W = 720;
 const CANVAS_H = 1280;
@@ -35,6 +29,7 @@ export default function RecordPage() {
   const [elapsedTick, setElapsedTick] = useState(0);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoMime, setVideoMime] = useState<string>("");
+  const [prompts, setPrompts] = useState<string[]>(FALLBACK_PROMPTS);
 
   // Refs - state read inside the animation loop lives in refs so the loop
   // doesn't need to be recreated on every state change
@@ -49,6 +44,7 @@ export default function RecordPage() {
   const videoBlobRef = useRef<Blob | null>(null);
 
   const phaseRef = useRef<Phase>("idle");
+  const promptsRef = useRef<string[]>(FALLBACK_PROMPTS);
   const currentIndexRef = useRef(0);
   const choiceRef = useRef<Choice | null>(null);
   const choiceTimestampRef = useRef(0);
@@ -60,6 +56,9 @@ export default function RecordPage() {
   useEffect(() => {
     countdownRef.current = countdown;
   }, [countdown]);
+  useEffect(() => {
+    promptsRef.current = prompts;
+  }, [prompts]);
 
   // ----- Canvas drawing -----
 
@@ -107,7 +106,7 @@ export default function RecordPage() {
     ctx.font = "bold 34px -apple-system, BlinkMacSystemFont, sans-serif";
     ctx.textAlign = "right";
     ctx.fillText(
-      `${state.index + 1}/${MOCK_PROMPTS.length}`,
+      `${state.index + 1}/${promptsRef.current.length}`,
       CANVAS_W - 40,
       76
     );
@@ -122,7 +121,7 @@ export default function RecordPage() {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    const prompt = MOCK_PROMPTS[state.index] ?? "Thanks for playing!";
+    const prompt = promptsRef.current[state.index] ?? "Thanks for playing!";
     ctx.fillStyle = "#0a0a0a";
     ctx.font = "900 76px -apple-system, BlinkMacSystemFont, sans-serif";
     ctx.textAlign = "center";
@@ -335,6 +334,19 @@ export default function RecordPage() {
       return;
     }
 
+    // Fetch fresh random prompts from the API
+    try {
+      const res = await fetch("/api/prompts/random?exclude=");
+      const data = await res.json();
+      if (data.prompts && data.prompts.length > 0) {
+        const texts = data.prompts.map((p: { text: string }) => p.text);
+        setPrompts(texts);
+        promptsRef.current = texts;
+      }
+    } catch {
+      // Use whatever prompts we already have
+    }
+
     // 3-second countdown
     setPhase("countdown");
     for (let i = 3; i >= 1; i--) {
@@ -441,7 +453,7 @@ export default function RecordPage() {
 
     setTimeout(() => {
       const next = currentIndexRef.current + 1;
-      if (next >= MOCK_PROMPTS.length) {
+      if (next >= promptsRef.current.length) {
         stopRecording();
         return;
       }
