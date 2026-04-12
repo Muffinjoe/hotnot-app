@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { renderShareCard } from "@/lib/render-card";
+import { generateRecapVideo, type QuestionResult } from "@/lib/render-video";
 
 interface Prompt {
   id: number;
@@ -18,7 +19,7 @@ interface Choice {
   isHot: boolean;
 }
 
-type Phase = "voting" | "result" | "done" | "loading";
+type Phase = "voting" | "result" | "done" | "loading" | "generating";
 
 const BATCH_SIZE = 5;
 
@@ -30,6 +31,7 @@ export default function Home() {
   const [userVotedHot, setUserVotedHot] = useState(false);
   const [votedIds, setVotedIds] = useState<number[]>([]);
   const [roundChoices, setRoundChoices] = useState<Choice[]>([]);
+  const [roundResults, setRoundResults] = useState<QuestionResult[]>([]);
   const [roundNumber, setRoundNumber] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -37,6 +39,9 @@ export default function Home() {
   const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "done">("idle");
   const [shareImageUrl, setShareImageUrl] = useState<string | null>(null);
   const [shareImageBlob, setShareImageBlob] = useState<Blob | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
+  const [videoPct, setVideoPct] = useState(0);
 
   const fetchBatch = useCallback(async (excludeIds: number[]) => {
     setPhase("loading");
@@ -100,6 +105,9 @@ export default function Home() {
       const newChoices = [...roundChoices, { text: prompt.text, isHot }];
       setRoundChoices(newChoices);
 
+      const newResults = [...roundResults, { text: prompt.text, isHot, hotPct: data.hotPct }];
+      setRoundResults(newResults);
+
       setPhase("result");
 
       setTimeout(() => {
@@ -121,6 +129,10 @@ export default function Home() {
     setRoundNumber(newRound);
     localStorage.setItem("hotnot_round", String(newRound));
     setRoundChoices([]);
+    setRoundResults([]);
+    if (videoUrl) URL.revokeObjectURL(videoUrl);
+    setVideoUrl(null);
+    setVideoBlob(null);
     fetchBatch(votedIds);
   };
 
@@ -188,8 +200,67 @@ export default function Home() {
 
       {/* Content */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 overflow-y-auto">
-        {phase === "loading" ? null : phase === "done" ? (
+        {phase === "loading" ? null : phase === "generating" ? (
+          <div className="text-center animate-[fadeIn_0.15s_ease-out]">
+            <p className="text-4xl mb-4">&#x1F3AC;</p>
+            <p className="text-xl font-bold mb-3">Creating your video...</p>
+            <div className="w-48 h-2 bg-neutral-200 rounded-full mx-auto overflow-hidden">
+              <div
+                className="h-full bg-orange-500 rounded-full transition-[width] duration-200"
+                style={{ width: `${videoPct}%` }}
+              />
+            </div>
+          </div>
+        ) : phase === "done" ? (
           <div className="w-full max-w-sm py-6 animate-[fadeIn_0.3s_ease-out]">
+            {/* Video Preview (if generated) */}
+            {videoUrl && (
+              <div className="mb-4">
+                <video
+                  src={videoUrl}
+                  controls
+                  playsInline
+                  autoPlay
+                  muted
+                  loop
+                  className="w-full rounded-2xl bg-neutral-100 border border-neutral-200"
+                  style={{ maxHeight: "45vh" }}
+                />
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={async () => {
+                      if (!videoBlob) return;
+                      const ext = videoBlob.type.includes("mp4") ? "mp4" : "webm";
+                      const file = new File([videoBlob], `hotnot-takes.${ext}`, { type: videoBlob.type });
+                      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+                        try { await navigator.share({ files: [file] }); return; } catch {}
+                      }
+                      const a = document.createElement("a");
+                      a.href = videoUrl;
+                      a.download = `hotnot-takes.${ext}`;
+                      a.click();
+                    }}
+                    className="flex-1 py-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 active:scale-95 transition-all text-white font-bold text-sm cursor-pointer"
+                  >
+                    Share Video &#x1F4F2;
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!videoBlob || !videoUrl) return;
+                      const ext = videoBlob.type.includes("mp4") ? "mp4" : "webm";
+                      const a = document.createElement("a");
+                      a.href = videoUrl;
+                      a.download = `hotnot-takes.${ext}`;
+                      a.click();
+                    }}
+                    className="flex-1 py-3 rounded-xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-all text-neutral-700 font-bold text-sm cursor-pointer border border-neutral-200"
+                  >
+                    Download &#x2B07;&#xFE0F;
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Share Card */}
             <div
               ref={cardRef}
@@ -232,46 +303,55 @@ export default function Home() {
             <div className="space-y-3">
               <button
                 onClick={async () => {
+                  if (roundResults.length === 0) return;
+                  setPhase("generating");
+                  setVideoPct(0);
+                  try {
+                    const blob = await generateRecapVideo(roundResults, setVideoPct);
+                    if (videoUrl) URL.revokeObjectURL(videoUrl);
+                    setVideoBlob(blob);
+                    setVideoUrl(URL.createObjectURL(blob));
+                    // Track
+                    fetch("/api/track", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ event: "video_made" }),
+                    }).catch(() => {});
+                  } catch {
+                    // Fall back to done
+                  }
+                  setPhase("done");
+                }}
+                className="w-full py-4 rounded-2xl bg-neutral-900 hover:bg-neutral-800 active:scale-95 transition-all text-white font-bold text-lg cursor-pointer"
+              >
+                Export Video &#x1F3AC;
+              </button>
+              <button
+                onClick={async () => {
                   const canvas = renderShareCard(roundChoices, tagline, scoreLine);
                   const blob = await new Promise<Blob | null>((res) =>
                     canvas.toBlob(res, "image/jpeg", 0.92)
                   );
                   if (!blob) return;
-
-                  // Track share click
                   fetch("/api/track", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ event: "share_click" }),
                   }).catch(() => {});
-
-                  // Show in modal so users can long-press to save (iOS-native)
-                  // or use share button for sending to other apps
                   if (shareImageUrl) URL.revokeObjectURL(shareImageUrl);
                   setShareImageBlob(blob);
                   setShareImageUrl(URL.createObjectURL(blob));
                 }}
-                className="w-full py-4 rounded-2xl bg-neutral-900 hover:bg-neutral-800 active:scale-95 transition-all text-white font-bold text-lg cursor-pointer"
+                className="w-full py-3 rounded-2xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-all text-neutral-700 font-medium cursor-pointer border border-neutral-200"
               >
-                Download your card &#x1F440;
+                Download Card &#x1F440;
               </button>
               <button
                 onClick={handlePlayAgain}
-                className="w-full py-4 rounded-2xl bg-orange-500 hover:bg-orange-400 active:scale-95 transition-all text-white font-bold text-lg cursor-pointer"
+                className="w-full py-3 rounded-2xl bg-orange-500 hover:bg-orange-400 active:scale-95 transition-all text-white font-bold cursor-pointer"
               >
                 Play Again
               </button>
-              <Link
-                href="/record"
-                className="block md:hidden w-full py-4 rounded-2xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-all cursor-pointer border border-neutral-200 text-center"
-              >
-                <span className="font-bold text-neutral-900">
-                  Make your video &#x1F3A5;
-                </span>
-                <span className="block text-xs text-neutral-400 mt-0.5">
-                  Share your reactions
-                </span>
-              </Link>
             </div>
           </div>
         ) : phase === "voting" && prompt ? (
