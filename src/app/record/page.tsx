@@ -60,6 +60,20 @@ export default function RecordPage() {
     promptsRef.current = prompts;
   }, [prompts]);
 
+  // Fetch random prompts on page load
+  useEffect(() => {
+    fetch("/api/prompts/random?exclude=")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.prompts && data.prompts.length > 0) {
+          const texts = data.prompts.map((p: { text: string }) => p.text);
+          setPrompts(texts);
+          promptsRef.current = texts;
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // ----- Canvas drawing -----
 
   const drawOverlay = useCallback((ctx: CanvasRenderingContext2D) => {
@@ -504,6 +518,17 @@ export default function RecordPage() {
     choiceRef.current = null;
     choiceTimestampRef.current = 0;
     setPhase("ready");
+    // Fetch fresh prompts for the next recording
+    fetch("/api/prompts/random?exclude=")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.prompts && data.prompts.length > 0) {
+          const texts = data.prompts.map((p: { text: string }) => p.text);
+          setPrompts(texts);
+          promptsRef.current = texts;
+        }
+      })
+      .catch(() => {});
   };
 
   // ----- Cleanup -----
