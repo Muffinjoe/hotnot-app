@@ -298,19 +298,78 @@ export default function Home() {
             </div>
           </div>
         ) : phase === "result" && result ? (
-          <div className="text-center animate-[fadeIn_0.15s_ease-out]">
-            <p className="text-7xl font-black mb-3">
-              {userVotedHot ? result.hotPct : 100 - result.hotPct}%
-            </p>
-            <p className="text-xl text-neutral-600 mb-2">
-              said {userVotedHot ? "HOT" : "NOT"}
-            </p>
-            <p className="text-lg font-bold text-neutral-700 mt-2">
-              {majority
-                ? "You agree with most people \u2705"
-                : "You're in the minority \uD83D\uDC40"}
-            </p>
-          </div>
+          (() => {
+            const hotPct = result.hotPct;
+            const notPct = 100 - hotPct;
+            const userPct = userVotedHot ? hotPct : notPct;
+            const otherPct = userVotedHot ? notPct : hotPct;
+            const userSideIsHot = userVotedHot;
+            const hotIsLeft = hotPct >= notPct;
+
+            const leftPct = hotIsLeft ? hotPct : notPct;
+            const rightPct = hotIsLeft ? notPct : hotPct;
+            const leftIsHot = hotIsLeft;
+            const userOnLeft = userSideIsHot === leftIsHot;
+
+            return (
+              <div className="w-full max-w-sm animate-[fadeIn_0.15s_ease-out]">
+                {/* Main percentage */}
+                <p className="text-7xl font-black text-center mb-1">
+                  {userPct}%
+                </p>
+                <p className="text-lg font-medium text-neutral-500 text-center mb-6">
+                  said {userVotedHot ? "HOT" : "NOT"}
+                </p>
+
+                {/* Split bar */}
+                <div className="flex items-center gap-0 rounded-full overflow-hidden h-12 mb-3">
+                  <div
+                    className={`h-full flex items-center justify-center font-bold text-sm transition-all ${
+                      leftIsHot
+                        ? "bg-green-400 text-green-900"
+                        : "bg-red-400 text-red-900"
+                    }`}
+                    style={{ width: `${Math.max(leftPct, 8)}%` }}
+                  >
+                    {leftIsHot ? "\uD83D\uDD25" : "\u274C"} {leftPct}%
+                  </div>
+                  <div
+                    className={`h-full flex items-center justify-center font-bold text-sm transition-all ${
+                      leftIsHot
+                        ? "bg-red-200 text-red-700"
+                        : "bg-green-200 text-green-700"
+                    }`}
+                    style={{ width: `${Math.max(rightPct, 8)}%` }}
+                  >
+                    {leftIsHot ? "\u274C" : "\uD83D\uDD25"} {rightPct}%
+                  </div>
+                </div>
+
+                {/* You marker */}
+                <div className="flex mb-6">
+                  <div
+                    className="flex flex-col items-center transition-all"
+                    style={{
+                      marginLeft: userOnLeft
+                        ? `${Math.max(leftPct / 2 - 5, 2)}%`
+                        : `${Math.max(leftPct + rightPct / 2 - 5, 2)}%`,
+                    }}
+                  >
+                    <span className="text-xs font-black text-neutral-900 bg-neutral-200 px-2.5 py-1 rounded-full">
+                      YOU
+                    </span>
+                  </div>
+                </div>
+
+                {/* Crowd text */}
+                <p className="text-lg font-bold text-center text-neutral-800">
+                  {majority
+                    ? "Most people agree with you \u2705"
+                    : `Only ${userPct}% agree with you \uD83D\uDC40`}
+                </p>
+              </div>
+            );
+          })()
         ) : null}
       </div>
 
