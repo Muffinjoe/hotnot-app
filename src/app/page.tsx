@@ -302,14 +302,8 @@ export default function Home() {
             const hotPct = result.hotPct;
             const notPct = 100 - hotPct;
             const userPct = userVotedHot ? hotPct : notPct;
-            const otherPct = userVotedHot ? notPct : hotPct;
-            const userSideIsHot = userVotedHot;
-            const hotIsLeft = hotPct >= notPct;
-
-            const leftPct = hotIsLeft ? hotPct : notPct;
-            const rightPct = hotIsLeft ? notPct : hotPct;
-            const leftIsHot = hotIsLeft;
-            const userOnLeft = userSideIsHot === leftIsHot;
+            // Left = always green (hot), Right = always red (not)
+            const userOnLeft = userVotedHot;
 
             return (
               <div className="w-full max-w-sm animate-[fadeIn_0.15s_ease-out]">
@@ -321,38 +315,30 @@ export default function Home() {
                   said {userVotedHot ? "HOT" : "NOT"}
                 </p>
 
-                {/* Split bar */}
+                {/* Split bar - left always green/hot, right always red/not */}
                 <div className="flex items-center gap-0 rounded-full overflow-hidden h-12 mb-3">
                   <div
-                    className={`h-full flex items-center justify-center font-bold text-sm transition-all ${
-                      leftIsHot
-                        ? "bg-green-400 text-green-900"
-                        : "bg-red-400 text-red-900"
-                    }`}
-                    style={{ width: `${Math.max(leftPct, 8)}%` }}
+                    className="h-full flex items-center justify-center font-bold text-sm bg-green-400 text-green-900"
+                    style={{ width: `${Math.max(hotPct, 8)}%` }}
                   >
-                    {leftIsHot ? "\uD83D\uDD25" : "\u274C"} {leftPct}%
+                    &#x1F525; {hotPct}%
                   </div>
                   <div
-                    className={`h-full flex items-center justify-center font-bold text-sm transition-all ${
-                      leftIsHot
-                        ? "bg-red-200 text-red-700"
-                        : "bg-green-200 text-green-700"
-                    }`}
-                    style={{ width: `${Math.max(rightPct, 8)}%` }}
+                    className="h-full flex items-center justify-center font-bold text-sm bg-red-200 text-red-700"
+                    style={{ width: `${Math.max(notPct, 8)}%` }}
                   >
-                    {leftIsHot ? "\u274C" : "\uD83D\uDD25"} {rightPct}%
+                    &#x274C; {notPct}%
                   </div>
                 </div>
 
                 {/* You marker */}
                 <div className="flex mb-6">
                   <div
-                    className="flex flex-col items-center transition-all"
+                    className="flex flex-col items-center"
                     style={{
                       marginLeft: userOnLeft
-                        ? `${Math.max(leftPct / 2 - 5, 2)}%`
-                        : `${Math.max(leftPct + rightPct / 2 - 5, 2)}%`,
+                        ? `${Math.max(hotPct / 2 - 5, 2)}%`
+                        : `${Math.max(hotPct + notPct / 2 - 5, 2)}%`,
                     }}
                   >
                     <span className="text-xs font-black text-neutral-900 bg-neutral-200 px-2.5 py-1 rounded-full">
