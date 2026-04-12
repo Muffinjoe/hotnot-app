@@ -133,6 +133,11 @@ function drawIntro(ctx: CanvasRenderingContext2D, t: number) {
   ctx.font = `500 32px -apple-system, BlinkMacSystemFont, sans-serif`;
   ctx.fillText("Do you agree?", W / 2, H / 2 + 70);
 
+  // Branding
+  ctx.fillStyle = "#d4d4d4";
+  ctx.font = `600 28px -apple-system, BlinkMacSystemFont, sans-serif`;
+  ctx.fillText("hotnot.app", W / 2, H / 2 + 130);
+
   ctx.globalAlpha = 1;
   ctx.textBaseline = "alphabetic";
 }
@@ -303,6 +308,11 @@ function drawSummary(
     ctx.fillStyle = "#f97316";
     ctx.font = `700 32px -apple-system, BlinkMacSystemFont, sans-serif`;
     ctx.fillText("Think you can do better?", W / 2, H / 2 + 80);
+
+    // Branding
+    ctx.fillStyle = "#d4d4d4";
+    ctx.font = `600 28px -apple-system, BlinkMacSystemFont, sans-serif`;
+    ctx.fillText("hotnot.app", W / 2, H / 2 + 140);
   }
 
   ctx.globalAlpha = 1;
