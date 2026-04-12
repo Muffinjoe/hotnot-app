@@ -226,38 +226,6 @@ export default function Home() {
                   className="rounded-2xl bg-neutral-100 border border-neutral-200"
                   style={{ maxHeight: "55vh", aspectRatio: "9/16" }}
                 />
-                <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={async () => {
-                      if (!videoBlob) return;
-                      const ext = videoBlob.type.includes("mp4") ? "mp4" : "webm";
-                      const file = new File([videoBlob], `hotnot-takes.${ext}`, { type: videoBlob.type });
-                      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-                        try { await navigator.share({ files: [file] }); return; } catch {}
-                      }
-                      const a = document.createElement("a");
-                      a.href = videoUrl;
-                      a.download = `hotnot-takes.${ext}`;
-                      a.click();
-                    }}
-                    className="flex-1 py-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 active:scale-95 transition-all text-white font-bold text-sm cursor-pointer"
-                  >
-                    Share Video &#x1F4F2;
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (!videoBlob || !videoUrl) return;
-                      const ext = videoBlob.type.includes("mp4") ? "mp4" : "webm";
-                      const a = document.createElement("a");
-                      a.href = videoUrl;
-                      a.download = `hotnot-takes.${ext}`;
-                      a.click();
-                    }}
-                    className="flex-1 py-3 rounded-xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-all text-neutral-700 font-bold text-sm cursor-pointer border border-neutral-200"
-                  >
-                    Download &#x2B07;&#xFE0F;
-                  </button>
-                </div>
               </div>
             )}
 
@@ -301,54 +269,66 @@ export default function Home() {
 
             {/* Actions */}
             <div className="space-y-3">
-              <button
-                onClick={async () => {
-                  if (roundResults.length === 0) return;
-                  setPhase("generating");
-                  setVideoPct(0);
-                  try {
-                    const blob = await generateRecapVideo(roundResults, setVideoPct);
-                    if (videoUrl) URL.revokeObjectURL(videoUrl);
-                    setVideoBlob(blob);
-                    setVideoUrl(URL.createObjectURL(blob));
-                    // Track
-                    fetch("/api/track", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ event: "video_made" }),
-                    }).catch(() => {});
-                  } catch {
-                    // Fall back to done
-                  }
-                  setPhase("done");
-                }}
-                className="w-full py-4 rounded-2xl bg-neutral-900 hover:bg-neutral-800 active:scale-95 transition-all text-white font-bold text-lg cursor-pointer"
-              >
-                Export Video &#x1F3AC;
-              </button>
-              <button
-                onClick={async () => {
-                  const canvas = renderShareCard(roundChoices, tagline, scoreLine);
-                  const blob = await new Promise<Blob | null>((res) =>
-                    canvas.toBlob(res, "image/jpeg", 0.92)
-                  );
-                  if (!blob) return;
-                  fetch("/api/track", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ event: "share_click" }),
-                  }).catch(() => {});
-                  if (shareImageUrl) URL.revokeObjectURL(shareImageUrl);
-                  setShareImageBlob(blob);
-                  setShareImageUrl(URL.createObjectURL(blob));
-                }}
-                className="w-full py-3 rounded-2xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-all text-neutral-700 font-medium cursor-pointer border border-neutral-200"
-              >
-                Download Card &#x1F440;
-              </button>
+              {videoUrl ? (
+                <>
+                  <button
+                    onClick={async () => {
+                      if (!videoBlob) return;
+                      const ext = videoBlob.type.includes("mp4") ? "mp4" : "webm";
+                      const file = new File([videoBlob], `hotnot-takes.${ext}`, { type: videoBlob.type });
+                      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+                        try { await navigator.share({ files: [file] }); return; } catch {}
+                      }
+                      const a = document.createElement("a");
+                      a.href = videoUrl;
+                      a.download = `hotnot-takes.${ext}`;
+                      a.click();
+                    }}
+                    className="w-full py-4 rounded-2xl bg-neutral-900 hover:bg-neutral-800 active:scale-95 transition-all text-white font-bold text-lg cursor-pointer"
+                  >
+                    Share Video &#x1F4F2;
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!videoBlob || !videoUrl) return;
+                      const ext = videoBlob.type.includes("mp4") ? "mp4" : "webm";
+                      const a = document.createElement("a");
+                      a.href = videoUrl;
+                      a.download = `hotnot-takes.${ext}`;
+                      a.click();
+                    }}
+                    className="w-full py-4 rounded-2xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-all text-neutral-700 font-bold text-lg cursor-pointer border border-neutral-200"
+                  >
+                    Download Video &#x2B07;&#xFE0F;
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={async () => {
+                    if (roundResults.length === 0) return;
+                    setPhase("generating");
+                    setVideoPct(0);
+                    try {
+                      const blob = await generateRecapVideo(roundResults, setVideoPct);
+                      if (videoUrl) URL.revokeObjectURL(videoUrl);
+                      setVideoBlob(blob);
+                      setVideoUrl(URL.createObjectURL(blob));
+                      fetch("/api/track", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ event: "video_made" }),
+                      }).catch(() => {});
+                    } catch {}
+                    setPhase("done");
+                  }}
+                  className="w-full py-4 rounded-2xl bg-neutral-900 hover:bg-neutral-800 active:scale-95 transition-all text-white font-bold text-lg cursor-pointer"
+                >
+                  Export Video &#x1F3AC;
+                </button>
+              )}
               <button
                 onClick={handlePlayAgain}
-                className="w-full py-3 rounded-2xl bg-orange-500 hover:bg-orange-400 active:scale-95 transition-all text-white font-bold cursor-pointer"
+                className="w-full py-4 rounded-2xl bg-orange-500 hover:bg-orange-400 active:scale-95 transition-all text-white font-bold text-lg cursor-pointer"
               >
                 Play Again
               </button>
