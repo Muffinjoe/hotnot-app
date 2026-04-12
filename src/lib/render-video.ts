@@ -253,7 +253,7 @@ function drawQuestion(
     ctx.fillStyle = "#ffffff";
     ctx.font = `800 16px -apple-system, BlinkMacSystemFont, sans-serif`;
     ctx.textAlign = "center";
-    ctx.fillText("YOU", markerX, barY + barH + 33);
+    ctx.fillText("ME", markerX, barY + barH + 33);
 
     // Reaction text
     ctx.fillStyle = "#525252";

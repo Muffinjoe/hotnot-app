@@ -215,7 +215,7 @@ export default function Home() {
           <div className="w-full max-w-sm py-6 animate-[fadeIn_0.3s_ease-out]">
             {/* Video Preview (if generated) */}
             {videoUrl && (
-              <div className="mb-4">
+              <div className="mb-4 flex flex-col items-center">
                 <video
                   src={videoUrl}
                   controls
@@ -223,8 +223,8 @@ export default function Home() {
                   autoPlay
                   muted
                   loop
-                  className="w-full rounded-2xl bg-neutral-100 border border-neutral-200"
-                  style={{ maxHeight: "45vh" }}
+                  className="rounded-2xl bg-neutral-100 border border-neutral-200"
+                  style={{ maxHeight: "55vh", aspectRatio: "9/16" }}
                 />
                 <div className="flex gap-2 mt-2">
                   <button
@@ -261,8 +261,8 @@ export default function Home() {
               </div>
             )}
 
-            {/* Share Card */}
-            <div
+            {/* Share Card (hidden when video is showing) */}
+            {!videoUrl && <div
               ref={cardRef}
               className="bg-neutral-50 rounded-2xl border border-neutral-200 px-4 pt-4 pb-3 mb-4"
             >
@@ -297,7 +297,7 @@ export default function Home() {
               <p className="text-sm font-semibold text-neutral-600 text-center mt-1.5">
                 hotnot.app
               </p>
-            </div>
+            </div>}
 
             {/* Actions */}
             <div className="space-y-3">
