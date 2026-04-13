@@ -342,7 +342,6 @@ const SEED_DATA: [string, number, number][] = [
   ["Israel?", 3, 4],
   ["4-day work week?", 6, 1],
   // Relationship & dating
-  ["Bill on the first date?", 3, 4],
   ["Checking partner's phone?", 2, 5],
   ["Posting your relationship?", 3, 4],
   ["Dating for money?", 2, 5],
