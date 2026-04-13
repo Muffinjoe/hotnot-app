@@ -345,7 +345,6 @@ const SEED_DATA: [string, number, number][] = [
   ["Bill on the first date?", 3, 4],
   ["Checking partner's phone?", 2, 5],
   ["Posting your relationship?", 3, 4],
-  ["Ghosting vs explaining?", 2, 5],
   ["Dating for money?", 2, 5],
   ["Liking others' selfies?", 3, 4],
   ["Moving in after 3 months?", 2, 5],
@@ -358,7 +357,6 @@ const SEED_DATA: [string, number, number][] = [
   // Morals & honesty
   ["Lying to avoid hurting?", 4, 3],
   ["Keeping extra change?", 4, 3],
-  ["Harsh truth vs kind lie?", 3, 4],
   ["Snitching on a friend?", 2, 5],
   ["Cutting off family?", 3, 4],
   ["Pretending to like a gift?", 4, 3],
