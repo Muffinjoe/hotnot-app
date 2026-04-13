@@ -117,6 +117,10 @@ export default function Home() {
         } else {
           // Round complete
           setPhase("done");
+          // Fire Meta Pixel event
+          if (typeof window !== "undefined" && (window as unknown as Record<string, unknown>).fbq) {
+            (window as unknown as Record<string, (...args: unknown[]) => void>).fbq("track", "CompleteRegistration");
+          }
         }
       }, 1500);
     } catch {
