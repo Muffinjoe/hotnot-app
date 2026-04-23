@@ -34,10 +34,10 @@ export default function HotList() {
           </span>
         </h1>
         <Link
-          href="/"
+          href="/play"
           className="text-sm font-medium text-orange-500 hover:text-orange-600 transition-colors"
         >
-          Vote
+          Play
         </Link>
       </header>
 

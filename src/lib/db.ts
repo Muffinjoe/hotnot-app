@@ -479,6 +479,23 @@ export async function initDb() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS custom_lists (
+      id SERIAL PRIMARY KEY,
+      slug TEXT NOT NULL UNIQUE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS custom_questions (
+      id SERIAL PRIMARY KEY,
+      list_id INTEGER NOT NULL REFERENCES custom_lists(id) ON DELETE CASCADE,
+      position INTEGER NOT NULL,
+      text TEXT NOT NULL,
+      hot_votes INTEGER DEFAULT 0,
+      not_votes INTEGER DEFAULT 0
+    )
+  `;
 
   const count = await sql`SELECT COUNT(*) as c FROM prompts`;
   if (Number(count[0].c) === 0) {
@@ -538,6 +555,73 @@ export async function saveEmail(email: string): Promise<boolean> {
 export async function trackEvent(event: string): Promise<void> {
   const sql = getDb();
   await sql`INSERT INTO events (event) VALUES (${event})`;
+}
+
+export interface CustomQuestion {
+  id: number;
+  text: string;
+  hot_votes: number;
+  not_votes: number;
+}
+
+function makeSlug(): string {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+}
+
+export async function createCustomList(questions: string[]): Promise<string> {
+  const sql = getDb();
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const slug = makeSlug();
+    try {
+      const rows = await sql`INSERT INTO custom_lists (slug) VALUES (${slug}) RETURNING id`;
+      const listId = Number(rows[0].id);
+      for (let i = 0; i < questions.length; i++) {
+        await sql`
+          INSERT INTO custom_questions (list_id, position, text)
+          VALUES (${listId}, ${i}, ${questions[i]})
+        `;
+      }
+      return slug;
+    } catch {
+      // slug collision, retry
+    }
+  }
+  throw new Error("Failed to create list");
+}
+
+export async function getCustomList(
+  slug: string
+): Promise<{ slug: string; questions: CustomQuestion[] } | null> {
+  const sql = getDb();
+  const lists = await sql`SELECT id FROM custom_lists WHERE slug = ${slug}`;
+  if (lists.length === 0) return null;
+  const listId = Number(lists[0].id);
+  const rows = await sql`
+    SELECT id, text, hot_votes, not_votes
+    FROM custom_questions
+    WHERE list_id = ${listId}
+    ORDER BY position ASC
+  `;
+  return { slug, questions: rows as unknown as CustomQuestion[] };
+}
+
+export async function voteCustom(
+  questionId: number,
+  isHot: boolean
+): Promise<{ hotPct: number } | null> {
+  const sql = getDb();
+  if (isHot) {
+    await sql`UPDATE custom_questions SET hot_votes = hot_votes + 1 WHERE id = ${questionId}`;
+  } else {
+    await sql`UPDATE custom_questions SET not_votes = not_votes + 1 WHERE id = ${questionId}`;
+  }
+  const rows = await sql`SELECT hot_votes, not_votes FROM custom_questions WHERE id = ${questionId}`;
+  if (rows.length === 0) return null;
+  const hot = Number(rows[0].hot_votes);
+  const not_ = Number(rows[0].not_votes);
+  const total = hot + not_;
+  const hotPct = total > 0 ? Math.round((hot / total) * 100) : 0;
+  return { hotPct };
 }
 
 export async function getAdminStats() {
